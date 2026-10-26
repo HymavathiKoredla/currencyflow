@@ -38,19 +38,34 @@ try {
 }
 
 // Database location - configurable via DB_PATH, defaults to server/data/currencyflow.db
-const defaultDbDir = path.resolve(__dirname, '../data');
-if (!fs.existsSync(defaultDbDir)) {
-  fs.mkdirSync(defaultDbDir, { recursive: true });
+// On Vercel (read-only filesystem), automatically store SQLite in /tmp
+const isVercel = Boolean(process.env.VERCEL);
+let dbPath;
+
+if (process.env.DB_PATH) {
+  dbPath = path.resolve(process.cwd(), process.env.DB_PATH);
+} else if (isVercel) {
+  dbPath = path.join('/tmp', 'currencyflow.db');
+} else {
+  const defaultDbDir = path.resolve(__dirname, '../data');
+  try {
+    if (!fs.existsSync(defaultDbDir)) {
+      fs.mkdirSync(defaultDbDir, { recursive: true });
+    }
+    dbPath = path.join(defaultDbDir, 'currencyflow.db');
+  } catch {
+    dbPath = path.join('/tmp', 'currencyflow.db');
+  }
 }
 
-const dbPath = process.env.DB_PATH
-  ? path.resolve(process.cwd(), process.env.DB_PATH)
-  : path.join(defaultDbDir, 'currencyflow.db');
-
-// Ensure target directory exists for custom DB_PATH
-const targetDir = path.dirname(dbPath);
-if (!fs.existsSync(targetDir)) {
-  fs.mkdirSync(targetDir, { recursive: true });
+// Ensure target directory exists
+try {
+  const targetDir = path.dirname(dbPath);
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+} catch (e) {
+  // Ignored if targetDir already exists or is /tmp
 }
 
 let dbInstance = null;

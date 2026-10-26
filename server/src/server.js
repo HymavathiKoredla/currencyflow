@@ -25,30 +25,36 @@ if (fs.existsSync(clientDistPath)) {
   });
 }
 
-const server = app.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(` CurrencyFlow Backend Server running on port ${PORT}`);
-  console.log(` Health check: http://localhost:${PORT}/api/health`);
-  console.log(` Currencies:   http://localhost:${PORT}/api/currencies`);
-  console.log(` Convert:      http://localhost:${PORT}/api/convert?amount=100&from=USD&to=INR`);
-  console.log(` History:      http://localhost:${PORT}/api/history?base=USD&quote=INR&range=30d`);
-  console.log(` Conversions:  http://localhost:${PORT}/api/conversions`);
-  console.log(`=======================================================`);
-});
+let server;
 
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received. Closing HTTP server.');
-  server.close(() => {
-    console.log('HTTP server closed.');
-    process.exit(0);
+if (!process.env.VERCEL) {
+  server = app.listen(PORT, () => {
+    console.log(`=======================================================`);
+    console.log(` CurrencyFlow Backend Server running on port ${PORT}`);
+    console.log(` Health check: http://localhost:${PORT}/api/health`);
+    console.log(` Currencies:   http://localhost:${PORT}/api/currencies`);
+    console.log(` Convert:      http://localhost:${PORT}/api/convert?amount=100&from=USD&to=INR`);
+    console.log(` History:      http://localhost:${PORT}/api/history?base=USD&quote=INR&range=30d`);
+    console.log(` Conversions:  http://localhost:${PORT}/api/conversions`);
+    console.log(`=======================================================`);
   });
-});
 
-process.on('SIGINT', () => {
-  console.log('SIGINT signal received. Closing HTTP server.');
-  server.close(() => {
-    console.log('HTTP server closed.');
-    process.exit(0);
+  // Handle graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received. Closing HTTP server.');
+    server.close(() => {
+      console.log('HTTP server closed.');
+      process.exit(0);
+    });
   });
-});
+
+  process.on('SIGINT', () => {
+    console.log('SIGINT signal received. Closing HTTP server.');
+    server.close(() => {
+      console.log('HTTP server closed.');
+      process.exit(0);
+    });
+  });
+}
+
+export default app;

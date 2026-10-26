@@ -24,15 +24,18 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
+// Health check endpoint (handles both /api/health and /health if prefix is stripped)
+const healthHandler = (req, res) => {
   res.json({
     status: 'ok',
     service: 'CurrencyFlow Backend API',
     uptime: Math.floor(process.uptime()),
     timestamp: new Date().toISOString()
   });
-});
+};
+
+app.get('/api/health', healthHandler);
+app.get('/health', healthHandler);
 
 // Mount API routes
 app.use('/api', currencyRoutes);
